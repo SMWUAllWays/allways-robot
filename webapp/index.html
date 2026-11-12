@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f7f2" />
+    <meta name="description" content="숙명여자대학교 교내 보행 접근성 정보를 바탕으로 이동 경로를 추천합니다." />
+    <title>All Ways | 모두의 길</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="All Ways 홈">
+        <span class="brand-mark" aria-hidden="true"><span>F</span></span>
+        <span class="brand-copy"><strong>all ways</strong><small>모두의 길</small></span>
+      </a>
+      <nav class="main-nav" aria-label="주 메뉴">
+        <a class="active" href="#route-panel">길 찾기</a>
+        <a href="#map-panel">접근성 지도</a>
+        <a href="#data-note">서비스 안내</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="campus-chip"><span class="status-dot"></span> 숙명여자대학교</span>
+        <button class="icon-button" id="open-map-settings" aria-label="지도 연결 설정" title="지도 연결 설정">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.8 7.8 0 0 1-1.4.8l-.3 1.5h-3l-.3-1.5a7.8 7.8 0 0 1-1.4-.8l-1.4.5-1.5-2.6 1.1-.9a6.7 6.7 0 0 1 0-1.6l-1.1-.9 1.5-2.6 1.4.5a7.8 7.8 0 0 1 1.4-.8l.3-1.5h3l.3 1.5a7.8 7.8 0 0 1 1.4.8l1.4-.5 1.5 2.6-1.1.9a6.7 6.7 0 0 1 0 1.6Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="top" class="app-shell">
+      <aside class="sidebar" id="route-panel">
+        <div class="intro-block">
+          <div class="eyebrow"><span class="eyebrow-line"></span> ACCESSIBLE CAMPUS ROUTE</div>
+          <h1>내게 맞는 길,<br /><em>편안하게</em> 찾아요</h1>
+          <p>이동 조건을 알려주시면 교내 구간 데이터를 비교해 알맞은 경로를 추천해요.</p>
+        </div>
+
+        <section class="trip-card" aria-labelledby="trip-title">
+          <div class="section-heading"><div><span class="section-kicker">01 / 여정</span><h2 id="trip-title">어디로 이동할까요?</h2></div><span class="mini-icon">↗</span></div>
+          <div class="places">
+            <label class="place-field"><span class="place-marker start-marker"></span><span class="place-label">출발</span>
+              <select id="start-place" aria-label="출발 장소"></select>
+            </label>
+            <div class="place-connector" aria-hidden="true"></div>
+            <label class="place-field"><span class="place-marker end-marker"></span><span class="place-label">도착</span>
+              <select id="end-place" aria-label="도착 장소"></select>
+            </label>
+            <button class="swap-button" id="swap-places" aria-label="출발과 도착 바꾸기" title="출발과 도착 바꾸기">↕</button>
+          </div>
+        </section>
+
+        <section class="profile-card" aria-labelledby="profile-title">
+          <div class="section-heading"><div><span class="section-kicker">02 / 이동 조건</span><h2 id="profile-title">나에게 맞춰 설정해요</h2></div><button class="text-button" id="reset-profile">초기화</button></div>
+          <div class="profile-presets" role="group" aria-label="이동 프로필">
+            <button class="preset active" data-preset="wheelchair"><span class="preset-icon">♿</span><span>휠체어</span></button>
+            <button class="preset" data-preset="walker"><span class="preset-icon">⌁</span><span>보행 보조기</span></button>
+            <button class="preset" data-preset="custom"><span class="preset-icon">＋</span><span>직접 설정</span></button>
+          </div>
+          <div class="condition-row">
+            <label for="width-input"><span>사용 기기 폭</span><small>기기 가장 넓은 부분</small></label>
+            <div class="number-field"><input id="width-input" type="number" min="400" max="1200" step="10" value="650" inputmode="numeric" /><span>mm</span></div>
+          </div>
+          <div class="condition-row">
+            <label for="slope-input"><span>허용 경사도</span><small>이 값보다 가파른 길은 제외</small></label>
+            <div class="number-field"><input id="slope-input" type="number" min="0" max="30" step="0.5" value="8" inputmode="decimal" /><span>%</span></div>
+          </div>
+          <div class="condition-row compact-row">
+            <label for="margin-input"><span>안전 여유 폭</span><small>기기 폭에 더해 확보할 공간</small></label>
+            <div class="number-field"><input id="margin-input" type="number" min="0" max="500" step="10" value="100" inputmode="numeric" /><span>mm</span></div>
+          </div>
+          <label class="toggle-row"><span><strong>계단·단차 구간 피하기</strong><small>접근성 정보가 확인된 구간만 추천</small></span><input id="avoid-stairs" type="checkbox" checked /><i aria-hidden="true"></i></label>
+          <label class="toggle-row"><span><strong>장애물 있는 구간 피하기</strong><small>측정 당시 장애물이 보고된 구간</small></span><input id="avoid-obstacles" type="checkbox" checked /><i aria-hidden="true"></i></label>
+          <button class="find-button" id="find-route"><span>조건에 맞는 경로 찾기</span><span class="button-arrow">→</span></button>
+        </section>
+
+        <div class="privacy-note"><span class="lock-icon">◇</span><span>이동 조건은 이 화면에서 경로를 계산하는 데만 사용돼요.</span></div>
+      </aside>
+
+      <section class="workspace" id="map-panel">
+        <div class="workspace-heading">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> YOUR CAMPUS, YOUR WAY</div><h2>오늘의 추천 경로</h2></div>
+          <div class="map-actions">
+            <button class="map-action" id="show-route-list"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>경로 목록</span></button>
+            <button class="map-action" id="open-map-settings-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 8.5 4l7 2.5L21 4v13.5L15.5 20l-7-2.5L3 20V6.5Z"/><path d="M8.5 4v13.5M15.5 6.5V20"/></svg><span id="map-mode-label">지도 설정</span></button>
+          </div>
+        </div>
+
+        <div class="map-card">
+          <div class="map-canvas" id="map-canvas" aria-label="숙명여자대학교 캠퍼스 접근성 구간 지도" role="img">
+            <div class="map-grid" aria-hidden="true"></div>
+            <img class="campus-illustration" src="./assets/sookmyung-campus-map.webp" alt="숙명여자대학교 캠퍼스 조감도. 건물 이름과 위치 참고용 지도입니다." /><svg class="schematic-map" id="schematic-map" viewBox="0 0 960 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <pattern id="parkDots" width="13" height="13" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#a9c5a9" opacity=".55"/></pattern>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#30413b" flood-opacity=".09"/></filter>
+              </defs>
+              <rect x="0" y="0" width="960" height="640" fill="#f2f3ec"/>
+              <path d="M-40 110 C130 90 170 150 270 126 S490 81 610 114 810 162 1000 116" fill="none" stroke="#d9ddd1" stroke-width="22"/>
+              <path d="M-40 110 C130 90 170 150 270 126 S490 81 610 114 810 162 1000 116" fill="none" stroke="#fafbf7" stroke-width="15"/>
+              <path d="M-20 530 C150 500 210 566 390 535 S690 477 990 528" fill="none" stroke="#d9ddd1" stroke-width="21"/>
+              <path d="M-20 530 C150 500 210 566 390 535 S690 477 990 528" fill="none" stroke="#fafbf7" stroke-width="14"/>
+              <path d="M770 -20 C733 120 820 208 768 320 S752 506 818 680" fill="none" stroke="#d9ddd1" stroke-width="20"/>
+              <path d="M770 -20 C733 120 820 208 768 320 S752 506 818 680" fill="none" stroke="#fafbf7" stroke-width="13"/>
+              <path d="M69 188 Q174 157 268 194 L288 267 Q209 310 96 277Z" fill="url(#parkDots)" stroke="#d8e3d4" stroke-width="2"/>
+              <path d="M590 375 Q690 340 748 393 L738 470 Q653 489 584 443Z" fill="url(#parkDots)" stroke="#d8e3d4" stroke-width="2"/>
+              <g class="building" filter="url(#softShadow)"><path d="M323 171 394 150 423 168 423 225 350 246 323 227Z"/><path d="M323 171 394 150 423 168 350 190Z" class="roof"/><text x="371" y="210">순헌관</text></g>
+              <g class="building" filter="url(#softShadow)"><path d="M484 210 548 190 575 207 575 259 509 279 484 261Z"/><path d="M484 210 548 190 575 207 509 228Z" class="roof"/><text x="532" y="248">명신관</text></g>
+              <g class="building" filter="url(#softShadow)"><path d="M376 345 462 319 495 341 495 403 405 430 376 408Z"/><path d="M376 345 462 319 495 341 405 367Z" class="roof"/><text x="435" y="389">중앙도서관</text></g>
+              <g class="building" filter="url(#softShadow)"><path d="M550 320 612 302 639 319 639 366 575 385 550 368Z"/><path d="M550 320 612 302 639 319 575 339Z" class="roof"/><text x="595" y="358">학생회관</text></g>
+              <path d="M104 392 C192 388 239 333 312 304 S392 285 445 300 524 300 566 264 641 208 727 233" fill="none" stroke="#dfe5d8" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M104 392 C192 388 239 333 312 304 S392 285 445 300 524 300 566 264 641 208 727 233" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+              <g id="schematic-edges"></g><g id="schematic-route"></g><g id="schematic-pins"></g>
+              <text class="map-road-label" x="75" y="585">청파로 47길</text><text class="map-road-label" x="809" y="524" transform="rotate(-80 809 524)">청파로</text>
+              <g class="north-mark" transform="translate(897 64)"><circle r="22"/><path d="M0 12V-10M0-10l-6 8M0-10l6 8"/><text x="0" y="-30">N</text></g>
+            </svg>
+            <div class="map-top-left"><span class="demo-badge"><span></span> 시연용 접근성 데이터</span><span class="map-caption" id="map-caption">숙명여대 캠퍼스 · 공식 배치도</span></div>
+            <button class="recenter-button" id="recenter-map" aria-label="지도 중심으로 이동" title="지도 중심으로 이동">◎</button>
+            <div class="map-attribution" id="map-attribution">공식 캠퍼스 배치도 · 이동 경로 측정 데이터는 시연용입니다.</div>
+          </div>
+          <div class="map-legend">
+            <span class="legend-title">구간 상태</span><span><i class="legend-line safe"></i> 조건에 맞음</span><span><i class="legend-line caution"></i> 주의</span><span><i class="legend-line blocked"></i> 통행 어려움</span>
+            <button class="legend-help" id="data-info">데이터 안내 <span>ⓘ</span></button>
+          </div>
+        </div>
+
+        <section class="recommendations" id="recommendations" aria-live="polite">
+          <div class="recommendation-title"><div><span class="section-kicker">ROUTE OPTIONS</span><h3>추천 경로 <span class="result-count" id="result-count">2개</span></h3></div><label class="sort-control" for="sort-select">정렬 <select id="sort-select"><option value="balanced">추천순</option><option value="distance">거리순</option><option value="slope">경사 낮은순</option></select></label></div>
+          <div class="route-options" id="route-options"></div>
+        </section>
+
+        <section class="segment-panel" id="segment-panel">
+          <div class="segment-heading"><div><span class="section-kicker">ROUTE DETAIL</span><h3>이 경로의 구간 정보</h3></div><span class="data-updated"><i></i> 샘플 데이터</span></div>
+          <div class="segment-list" id="segment-list"></div>
+        </section>
+
+        <footer class="page-footer" id="data-note"><span>ALL WAYS <i>·</i> 모두의 이동을 위한 캠퍼스 접근성 지도</span><span>센서 연동 전 시연 데이터 · 실제 이동 전 현장 확인이 필요해요.</span></footer>
+      </section>
+    </main>
+
+    <dialog class="settings-dialog" id="map-settings-dialog" aria-labelledby="settings-title">
+      <form method="dialog" class="dialog-close-form"><button class="dialog-close" aria-label="닫기">×</button></form>
+      <div class="dialog-icon">◎</div><span class="section-kicker">MAP CONNECTION</span><h2 id="settings-title">Google 지도 연결</h2>
+      <p>Google Maps JavaScript API 키를 입력하면 숙명여대 주변 실제 지도를 표시하고, 접근성 구간을 그 위에 겹쳐 보여줘요.</p>
+      <label class="api-key-label" for="api-key-input">브라우저 API 키</label><input id="api-key-input" class="api-key-input" type="password" placeholder="AIza…" autocomplete="off" />
+      <p class="key-notice">키는 이 브라우저에만 저장됩니다. Google Cloud에서 Maps JavaScript API와 Geocoding API만 허용하고 웹사이트(HTTP referrer) 제한을 설정하세요. 키를 GitHub에 올리지 마세요.</p>
+      <div class="dialog-actions"><button class="secondary-button" id="clear-map-key" type="button">키 삭제</button><button class="primary-button" id="save-map-key" type="button">지도 연결하기</button></div>
+      <a class="docs-link" href="https://developers.google.com/maps/documentation/javascript/get-api-key" target="_blank" rel="noreferrer">API 키 발급 방법 보기 ↗</a>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
+
+
