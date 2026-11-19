@@ -28,7 +28,7 @@ const presets = {
   custom: null,
 };
 const $ = (selector) => document.querySelector(selector);
-const state = { selectedRouteId: null, routes: [], map: null, overlays: [], usingGoogleMap: false, toastTimer: null };
+const state = { selectedRouteId: null, routes: [], map: null, overlays: [], usingGoogleMap: false, toastTimer: null, blockedEdgeIds: new Set(), journeyActive: false, journeyStep: 0 };
 
 function initPlaces() {
   const entries = Object.entries(CAMPUS.nodes);
@@ -52,6 +52,7 @@ function getConditions() {
 }
 
 function isEdgeUsable(edge, conditions) {
+  if (state.blockedEdgeIds.has(edge.id)) return false;
   if (edge.width < conditions.width + conditions.margin) return false;
   if (edge.slope > conditions.slope) return false;
   if (conditions.avoidStairs && edge.stairs) return false;
@@ -111,6 +112,7 @@ function renderRoutes() {
   if (!state.routes.length) {
     list.innerHTML = '<div class="empty-routes">입력한 조건을 모두 만족하는 경로를 찾지 못했어요.<br />기기 폭이나 허용 경사도를 조금 조정하거나, 지도에서 미확인 구간을 확인해 주세요.</div>';
     $('#segment-list').innerHTML = '<div class="empty-routes">선택할 수 있는 경로가 없습니다.</div>';
+    renderJourney();
     return;
   }
   const sort = $('#sort-select').value;
@@ -133,9 +135,75 @@ function renderRoutes() {
   }));
   renderSegments();
   drawMapOverlays();
+  renderJourney();
 }
 
 function currentRoute() { return state.routes.find((route) => route.id === state.selectedRouteId); }
+
+function renderJourney() {
+  const route = currentRoute();
+  const status = $('#journey-status');
+  const instruction = $('#journey-instruction');
+  const button = $('#start-journey');
+  if (!route) {
+    status.textContent = '현재 조건에 맞는 경로가 없어요';
+    instruction.textContent = '이동 조건을 조정하거나 출발지와 도착지를 다시 선택해 주세요.';
+    button.textContent = '이동 안내 시작';
+    return;
+  }
+  if (!state.journeyActive) {
+    status.textContent = `${CAMPUS.nodes[$('#start-place').value].name}에서 출발 준비`;
+    instruction.textContent = `선택한 경로는 ${formatDistance(route.distance)}예요. 이동 안내를 시작하면 구간별 정보를 보여드려요.`;
+    button.textContent = '이동 안내 시작';
+    return;
+  }
+  if (state.journeyStep >= route.edges.length) {
+    status.textContent = '목적지에 도착했어요';
+    instruction.textContent = `${CAMPUS.nodes[$('#end-place').value].name}에 도착했습니다. 안내를 마쳤어요.`;
+    button.textContent = '안내 다시 보기';
+    return;
+  }
+  const edge = route.edges[state.journeyStep];
+  const start = $('#start-place').value;
+  const nodes = getRouteNodes(route, start);
+  const from = nodes[state.journeyStep];
+  const to = nodes[state.journeyStep + 1];
+  status.textContent = `구간 ${state.journeyStep + 1}/${route.edges.length} · ${CAMPUS.nodes[from].name}에서 ${CAMPUS.nodes[to].name} 방향`;
+  instruction.textContent = `약 ${formatDistance(edge.distance)} · 통로 폭 ${edge.width}mm · 경사 ${edge.slope}%${edge.stairs ? ' · 계단 구간' : ''}${edge.obstacle ? ' · 장애물 정보 확인 필요' : ''}`;
+  button.textContent = '다음 구간 안내';
+}
+
+function advanceJourney() {
+  const route = currentRoute();
+  if (!route) { showToast('먼저 이동 가능한 경로를 선택해 주세요.'); return; }
+  if (!state.journeyActive || state.journeyStep >= route.edges.length) {
+    state.journeyActive = true;
+    state.journeyStep = 0;
+  } else {
+    state.journeyStep += 1;
+  }
+  renderJourney();
+}
+
+function simulateObstacle() {
+  const route = currentRoute();
+  if (!route) { showToast('장애물 상황을 표시할 경로가 없어요.'); return; }
+  if (!state.journeyActive) state.journeyActive = true;
+  const index = Math.min(state.journeyStep, route.edges.length - 1);
+  const edge = route.edges[index];
+  state.blockedEdgeIds.add(edge.id);
+  state.journeyStep = 0;
+  runSearch();
+  if (state.routes.length) {
+    $('#journey-status').textContent = '장애물 상황을 반영해 우회 경로를 찾았어요';
+    $('#journey-instruction').textContent = `${CAMPUS.nodes[edge.from].name} ↔ ${CAMPUS.nodes[edge.to].name} 구간을 시연상 통행 불가로 표시했어요. 새 경로를 확인해 주세요.`;
+    $('#start-journey').textContent = '우회 경로 안내 시작';
+    showToast('시연용 장애물 상황을 반영해 경로를 다시 계산했어요.');
+  } else {
+    $('#journey-status').textContent = '우회 가능한 경로가 없어요';
+    $('#journey-instruction').textContent = '안전한 경로가 확인되지 않아 이동을 멈추고 주변에 도움을 요청해야 해요.';
+  }
+}
 
 function renderSegments() {
   const route = currentRoute();
@@ -307,6 +375,9 @@ function setPreset(name) {
 
 function wireEvents() {
   $('#find-route').addEventListener('click', runSearch);
+  $('#start-journey').addEventListener('click', advanceJourney);
+  $('#simulate-obstacle').addEventListener('click', simulateObstacle);
+  $('#request-help').addEventListener('click', () => showToast('도움 호출은 기획 시연입니다. 실제 연락처·위치 공유 연동은 아직 연결되지 않았어요.'));
   $('#sort-select').addEventListener('change', renderRoutes);
   $('#swap-places').addEventListener('click', () => { const a = $('#start-place').value; $('#start-place').value = $('#end-place').value; $('#end-place').value = a; runSearch(); });
   $('#reset-profile').addEventListener('click', () => setPreset('wheelchair'));
