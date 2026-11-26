@@ -123,6 +123,25 @@
           </div>
         </div>
 
+        <section class="journey-panel" aria-labelledby="journey-title">
+          <div class="journey-heading">
+            <div><span class="section-kicker">ON THE WAY</span><h3 id="journey-title">이동 중 안전 안내</h3></div>
+            <span class="connection-pill"><i></i> 로봇 센서 미연결 · 시연 모드</span>
+          </div>
+          <div class="journey-content">
+            <div class="journey-step" aria-live="polite">
+              <span class="step-icon" aria-hidden="true">◎</span>
+              <div><strong id="journey-status">경로를 선택하고 이동 안내를 시작해 보세요</strong><p id="journey-instruction">시작하면 다음 이동 구간과 주의사항을 순서대로 보여드려요.</p></div>
+            </div>
+            <div class="journey-actions">
+              <button class="journey-primary" id="start-journey" type="button">이동 안내 시작</button>
+              <button class="journey-secondary" id="simulate-obstacle" type="button">장애물 상황 보기</button>
+              <button class="journey-help" id="request-help" type="button">도움 요청 흐름</button>
+            </div>
+          </div>
+          <p class="journey-note">현재는 화면 동작 시연입니다. 실제 장애물 알림·자동 재경로·도움 호출은 로봇 센서, 위치, 통신 기능을 연결해야 작동합니다.</p>
+        </section>
+
         <section class="recommendations" id="recommendations" aria-live="polite">
           <div class="recommendation-title"><div><span class="section-kicker">ROUTE OPTIONS</span><h3>추천 경로 <span class="result-count" id="result-count">2개</span></h3></div><label class="sort-control" for="sort-select">정렬 <select id="sort-select"><option value="balanced">추천순</option><option value="distance">거리순</option><option value="slope">경사 낮은순</option></select></label></div>
           <div class="route-options" id="route-options"></div>
